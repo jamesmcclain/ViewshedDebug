@@ -43,14 +43,21 @@ object ViewshedBug {
     val (_, md) = TileLayerMetadata.fromRDD(inputRdd, FloatingLayoutScheme(512))
     val tiled = ContextRDD(inputRdd.tileToLayout(md.cellType, md.layout, NearestNeighbor), md)
 
-    // Perform viewshed
     val point27 = Viewpoint(x = 370815.36, y = 3734806.85, viewHeight = 1.8, angle = 0, fieldOfView = 360, altitude = -1.0/0)
-    val layerVs = tiled.viewshed(Seq(point27), maxDistance=3218.69, curvature=true)
 
-    // Save result
-    val raster = layerVs.stitch
-    val tiff = GeoTiff(raster, md.crs)
-    GeoTiffWriter.write(tiff, "/tmp/moop.tif", optimizedOrder = true)
+    // Perform viewsheds
+    {
+      val layerVs = tiled.viewshed(Seq(point27), maxDistance=3218.69, curvature=true)
+      val raster = layerVs.stitch
+      val tiff = GeoTiff(raster, md.crs)
+      GeoTiffWriter.write(tiff, "/tmp/moop.tif", optimizedOrder = true)
+    }
+    {
+      val layerVs = tiled.viewshed(Seq(point27), maxDistance=3218.69, curvature=true, scatter = false)
+      val raster = layerVs.stitch
+      val tiff = GeoTiff(raster, md.crs)
+      GeoTiffWriter.write(tiff, "/tmp/moop2.tif", optimizedOrder = true)
+    }
 
     // Disestablish Spark Context
     sparkContext.stop
